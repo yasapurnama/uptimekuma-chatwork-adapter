@@ -6,7 +6,6 @@ const PORT = process.env.PORT || 8080;
 const CHATWORK_TOKEN = process.env.CHATWORK_TOKEN;
 const CHATWORK_ROOM_ID = process.env.CHATWORK_ROOM_ID;
 const SHARED_SECRET = process.env.SHARED_SECRET || null;
-const MESSAGE_PREFIX = process.env.MESSAGE_PREFIX || "";
 
 if (!CHATWORK_TOKEN || !CHATWORK_ROOM_ID) {
   console.error("ERROR: CHATWORK_TOKEN and CHATWORK_ROOM_ID are required.");
@@ -34,57 +33,51 @@ app.post("/webhook/kuma", async (req, res) => {
 
     const payload = req.body || {};
 
+    // Debug log the incoming payload
     console.log("Received payload:", payload);
 
-    const statusRaw =
-      payload.status ??
-      payload.state ??
-      payload.heartbeat?.status ??
-      payload.heartbeat?.status;
+    const status = payload.heartbeat?.status ?? 0;
+    const monitorName = payload.monitor?.name ?? "Unknown";
 
-    const statusText =
-      (typeof statusRaw === "string" && statusRaw.toLowerCase()) ||
-      (statusRaw === 1 ? "UP" : statusRaw === 0 ? "DOWN" : String(statusRaw ?? "UNKNOWN").toUpperCase());
-
-    const monitorName =
-      payload.monitorName ??
-      payload.monitor_name ??
-      payload.monitor?.name ??
-      payload.name ??
-      "Unknown Monitor";
-
-    const monitorUrl =
-      payload.monitorURL ??
-      payload.monitor_url ??
-      payload.url ??
-      payload.monitor?.url ??
-      "";
-
-    const ping = payload.ping ?? payload.heartbeat?.ping ?? undefined;
-    const httpCode = payload.httpCode ?? payload.http_code ?? payload.heartbeat?.code ?? undefined;
-    const time = payload.time ?? payload.heartbeat?.time ?? undefined;
+    const monitorUrl = payload.monitor?.url ?? "";
+    const ping = payload.heartbeat?.ping ?? "N/A";
     const duration = payload.duration ?? payload.heartbeat?.duration ?? undefined;
-    const timezone = payload.heartbeat.timezone ?? undefined;
+    const timezone = payload.heartbeat.timezone ?? "local";
     const localTime = payload.heartbeat.localDateTime ?? undefined; 
 
-    const suppliedMsg = payload.msg || payload.message;
+    const heartbeatMsg = payload.heartbeat?.msg ?? "N/A";
 
     const lines = [];
-    if (MESSAGE_PREFIX) lines.push(`${MESSAGE_PREFIX} ${statusText}`);
-    else lines.push(`Status: ${statusText}`);
+    if (status === 1) {
+      lines.push("[info][title]✅ Uptime Kuma Recovery[/title]");
+      lines.push(`🟢 ${monitorName} is UP\n`);
 
-    lines.push(`Monitor: ${monitorName}`);
-    if (monitorUrl) lines.push(`URL: ${monitorUrl}`);
-    if (httpCode !== undefined) lines.push(`HTTP: ${httpCode}`);
-    lines.push(`Ping: ${ping || "N/A"} ms`);
-    if (duration !== undefined) lines.push(`Duration: ${duration}s`);
-    if (localTime !== undefined) lines.push(`Time (${timezone || "local"}): ${localTime}`);
+      lines.push(`🌐 URL: ${monitorUrl}`);
+      lines.push(`⏱ Ping: ${ping} ms`);
+      if (duration !== undefined) lines.push(`🕒 Duration: ${duration}s`);
+      if (localTime !== undefined) lines.push(`📍 Time (${timezone}): ${localTime}\n`);  
 
-    if (suppliedMsg) {
-      lines.push("");
-      lines.push(suppliedMsg);
+      lines.push("🎉 Status: Service has recovered and is now reachable");
+      lines.push("[hr]");
+      lines.push(`📝 Status code:`);
+      lines.push(`[code]${heartbeatMsg}[/code]`);
+      lines.push("[/info]");
+
+    } else {
+      lines.push("[info][title] 🚨 Uptime Kuma Alert[/title]");
+      lines.push(`🔴 ${monitorName} is DOWN\n`);
+
+      lines.push(`🌐 URL: ${monitorUrl}`);
+      lines.push(`⏱ Ping: ${ping} ms`);
+      if (duration !== undefined) lines.push(`🕒 Duration: ${duration}s`);
+      if (localTime !== undefined) lines.push(`📍 Time (${timezone}): ${localTime}\n`);  
+
+      lines.push("⚠️ Status: Service unreachable");
+      lines.push("[hr]");
+      lines.push(`📝 Error details:`);
+      lines.push(`[code]${heartbeatMsg}[/code]`);
+      lines.push("[/info]");
     }
-
     const body = lines.join("\n");
 
     const endpoint = `https://api.chatwork.com/v2/rooms/${encodeURIComponent(CHATWORK_ROOM_ID)}/messages`;
