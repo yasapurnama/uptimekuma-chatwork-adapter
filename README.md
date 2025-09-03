@@ -58,7 +58,6 @@ CHATWORK_ROOM_ID=123456789
 
 # Optional
 SHARED_SECRET=supersecret
-MESSAGE_PREFIX=[UptimeKuma]
 PORT=8080
 ```
 
@@ -74,17 +73,25 @@ The service listens on `http://localhost:8080/webhook/kuma`.
 
 ## 🐳 Docker
 
+### Docker Hub
+
+[![Docker Pulls](https://img.shields.io/docker/pulls/yasapurnama/uptimekuma-chatwork-adapter?style=flat-square)](https://hub.docker.com/r/yasapurnama/uptimekuma-chatwork-adapter)
+
+```bash
+docker run --rm -p 8080:8080 -e CHATWORK_TOKEN=your_token -e CHATWORK_ROOM_ID=123456789 yasapurnama/uptimekuma-chatwork-adapter:latest
+```
+
 ### Build & Run locally
 
 ``` bash
 docker build -t uptimekuma-chatwork-adapter .
-docker run --rm -p 8080:8080   -e CHATWORK_TOKEN=your_token   -e CHATWORK_ROOM_ID=123456789   -e MESSAGE_PREFIX="[UptimeKuma]"   uptimekuma-chatwork-adapter
+docker run --rm -p 8080:8080 -e CHATWORK_TOKEN=your_token -e CHATWORK_ROOM_ID=123456789 uptimekuma-chatwork-adapter
 ```
 
 ### Multi-arch build & push to Docker Hub
 
 ``` bash
-docker buildx build   --platform linux/amd64,linux/arm64   -t youruser/uptimekuma-chatwork-adapter:1.0.0   -t youruser/uptimekuma-chatwork-adapter:latest   --push .
+docker buildx build --platform linux/amd64,linux/arm64 -t youruser/uptimekuma-chatwork-adapter:1.0.0 -t youruser/uptimekuma-chatwork-adapter:latest --push .
 ```
 
 ------------------------------------------------------------------------
