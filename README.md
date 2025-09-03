@@ -10,6 +10,18 @@ Chatwork room.
 
 ------------------------------------------------------------------------
 
+## 📥 Example
+
+### Server is Down
+
+![Server is Down](https://github.com/user-attachments/assets/b7688974-90c5-4509-a813-92be55a1c5e8)
+
+### Server is Up
+
+![Server is Up](https://github.com/user-attachments/assets/d8cdfd28-88a0-4b6f-b85f-e9028b06cdab)
+
+------------------------------------------------------------------------
+
 ## ✨ Features
 
 -   Receive Uptime Kuma webhook events (UP/DOWN, ping, HTTP code, etc.)
@@ -79,23 +91,12 @@ docker buildx build   --platform linux/amd64,linux/arm64   -t youruser/uptimekum
 
 ## ⚙️ Configuration
 
-  ------------------------------------------------------------------------------------
-  Variable                  Required       Default      Description
-  ------------------------- -------------- ------------ ------------------------------
-  `CHATWORK_TOKEN`          ✅ Yes         ---          Your Chatwork API token
-
-  `CHATWORK_ROOM_ID`        ✅ Yes         ---          Room ID where messages will be
-                                                        sent
-
-  `PORT`                    ❌ No          `8080`       HTTP server port
-
-  `SHARED_SECRET`           ❌ No          ---          If set, incoming requests must
-                                                        include header
-                                                        `X-Adapter-Secret: <secret>`
-
-  `MESSAGE_PREFIX`          ❌ No          ---          Prefix added to each message
-                                                        (e.g. `[UptimeKuma]`)
-  ------------------------------------------------------------------------------------
+| Variable         | Required | Default | Description                                                                 |
+|------------------|----------|---------|-----------------------------------------------------------------------------|
+| `CHATWORK_TOKEN` | ✅ Yes   | ---     | Your Chatwork API token                                                     |
+| `CHATWORK_ROOM_ID` | ✅ Yes | ---     | Room ID where messages will be sent                                         |
+| `PORT`           | ❌ No (Optional)   | `8080`  | HTTP server port                                                            |
+| `SHARED_SECRET`  | ❌ No (Optional)   | ---     | If set, incoming requests must include header `X-Adapter-Secret: <secret>`  |
 
 ------------------------------------------------------------------------
 
@@ -112,53 +113,13 @@ docker buildx build   --platform linux/amd64,linux/arm64   -t youruser/uptimekum
 
     -   **Additional Header** (if you set secret):
 
-            X-Adapter-Secret: your-secret
-
-    -   **Custom Body** (recommended):
-
-        ``` json
+        ```
         {
-          "status": {{status}},
-          "monitorName": "{{monitor_name}}",
-          "monitorURL": "{{monitor_url}}",
-          "msg": "{{msg}}",
-          "httpCode": {{http_code}},
-          "ping": {{ping}},
-          "time": {{timestamp}},
-          "duration": {{down_duration}}
+          "X-Adapter-Secret": "your-shared-secret"
         }
         ```
+
 3.  Test the notification → You should see the alert in Chatwork.
-
-------------------------------------------------------------------------
-
-## 🧪 Testing manually
-
-Send a fake alert via `curl`:
-
-``` bash
-curl -X POST http://localhost:8080/webhook/kuma   -H "Content-Type: application/json"   -H "X-Adapter-Secret: supersecret"   -d '{
-    "status": 0,
-    "monitorName": "Homepage",
-    "monitorURL": "https://example.com",
-    "httpCode": 500,
-    "ping": 1234,
-    "msg": "Service DOWN detected by Kuma"
-  }'
-```
-
-------------------------------------------------------------------------
-
-## 📜 Example Chatwork Message
-
-    [UptimeKuma] DOWN
-    Monitor: Homepage
-    URL: https://example.com
-    HTTP: 500
-    Ping: 1234 ms
-    Time: 2025-09-02T12:34:56.000Z
-
-    Service DOWN detected by Kuma
 
 ------------------------------------------------------------------------
 
