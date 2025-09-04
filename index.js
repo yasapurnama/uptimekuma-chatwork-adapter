@@ -6,6 +6,8 @@ const PORT = process.env.PORT || 8080;
 const CHATWORK_TOKEN = process.env.CHATWORK_TOKEN;
 const CHATWORK_ROOM_ID = process.env.CHATWORK_ROOM_ID;
 const SHARED_SECRET = process.env.SHARED_SECRET || null;
+const MENTION_USER_IDS = process.env.MENTION_USER_IDS || "";
+const MENTION_ALL = process.env.MENTION_ALL === "true" || false;
 
 if (!CHATWORK_TOKEN || !CHATWORK_ROOM_ID) {
   console.error("ERROR: CHATWORK_TOKEN and CHATWORK_ROOM_ID are required.");
@@ -47,9 +49,39 @@ app.post("/webhook/kuma", async (req, res) => {
 
     const heartbeatMsg = payload.heartbeat?.msg ?? "N/A";
 
+    // Mentions users
+    let mentionText = "";
+    if (MENTION_ALL) {
+      const getMember = `https://api.chatwork.com/v2/rooms/${encodeURIComponent(CHATWORK_ROOM_ID)}/members`;
+
+      try {
+        const memberResult = await axios.get(getMember, {
+          headers: {
+            "X-ChatWorkToken": CHATWORK_TOKEN
+          },
+          timeout: 10000
+        });
+
+        const members = memberResult.data;
+        mentionText = members.map((m) => `[To:${m.account_id}]`).join("");
+        console.log("Mention All Account IDs:", mentionText);
+
+      } catch (err) {
+        console.error("Failed to fetch Chatwork members:", err.response?.status, err.response?.data || err.message);
+      }
+
+    } else if (MENTION_USER_IDS.trim() !== "") {
+      const ids = MENTION_USER_IDS.split(",").map(id => id.trim()).filter(id => id !== "");
+
+      if (ids.length > 0) {
+        mentionText = ids.map(id => `[To:${id}]`).join("");
+        console.log("Mention Specific Account IDs:", mentionText);
+      }
+    }
+
     const lines = [];
     if (status === 1) {
-      lines.push("[info][title]✅ Uptime Kuma Recovery[/title]");
+      lines.push(`${mentionText}[info][title]✅ Uptime Kuma Recovery[/title]`);
       lines.push(`🟢 ${monitorName} is UP\n`);
 
       lines.push(`🌐 URL: ${monitorUrl}`);
@@ -64,7 +96,7 @@ app.post("/webhook/kuma", async (req, res) => {
       lines.push("[/info]");
 
     } else {
-      lines.push("[info][title] 🚨 Uptime Kuma Alert[/title]");
+      lines.push(`${mentionText}[info][title] 🚨 Uptime Kuma Alert[/title]`);
       lines.push(`🔴 ${monitorName} is DOWN\n`);
 
       lines.push(`🌐 URL: ${monitorUrl}`);
