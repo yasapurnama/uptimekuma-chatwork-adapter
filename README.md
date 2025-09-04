@@ -104,6 +104,8 @@ docker buildx build --platform linux/amd64,linux/arm64 -t youruser/uptimekuma-ch
 | `CHATWORK_ROOM_ID` | ✅ Yes | ---     | Room ID where messages will be sent                                         |
 | `PORT`           | ❌ No (Optional)   | `8080`  | HTTP server port                                                            |
 | `SHARED_SECRET`  | ❌ No (Optional)   | ---     | If set, incoming requests must include header `X-Adapter-Secret: <secret>`  |
+| `MENTION_USER_IDS` | ❌ No (Optional) | ---     | Comma-separated user IDs to mention in messages (e.g. `123,456`)            |
+| `MENTION_ALL`  | ❌ No (Optional)     | `false` | If `true`, mentions `@all` in messages (overrides `MENTION_USER_IDS`)       |
 
 ------------------------------------------------------------------------
 
