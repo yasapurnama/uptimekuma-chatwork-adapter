@@ -59,6 +59,8 @@ CHATWORK_ROOM_ID=123456789
 # Optional
 SHARED_SECRET=supersecret
 PORT=8080
+MENTION_USER_IDS=""
+MENTION_ALL="false"
 ```
 
 ### 4. Run
